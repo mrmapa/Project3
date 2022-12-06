@@ -1,6 +1,7 @@
 import pygame, sys
 from constants import *
 from recommender import *
+from traversals import *
 
 def setSearchBar(screen):
     # search bar
@@ -85,7 +86,7 @@ def main():
     forYou = font.render("For You...", 0, [255, 255, 255])
     setRecommendationBox(forYou, screen)
 
-    similarity_matrix, user_anime_matrix = similarity_matrix()
+    similarity_matrix, user_anime_matrix = similarity_matrix_generator()
 
     similarity_graph = {}
     for user in similarity_matrix.index:
@@ -108,7 +109,26 @@ def main():
     
         similarity_graph[user] = value
 
+    # user_rated_animes: list of animes that user has rated
+    # user_rating: list of corresponding scores
+    user_rated_animes = ['Neon Genesis Evangelion', 'Death Note', 'Hunter x Hunter (2011)', 'Monster', 'Death Parade']
+    user_ratings = [7.0, 6.0, 9.0, 2.0, 4.0]
+    user_prefs = {'username':['sample_base_user'] * len(user_rated_animes), 'title': user_rated_animes, 'my_score': user_ratings}
+    user_prefs_df = pd.DataFrame(data=user_prefs)
+    user_prefs_df = user_prefs_df.pivot_table(index="username", columns='title', values='my_score')
 
+    user_prefs_df = user_prefs_df.subtract(user_prefs_df.mean(axis=1), axis='rows')
+    user_prefs_df = user_prefs_df.divide(user_prefs_df.std(axis=1), axis='rows')
+    user_prefs_df = pd.concat([similarity_matrix, user_prefs_df])
+    user_prefs_df
+
+    print("Starting BFS")
+
+    user_similarities = similarity_matrix_generator(user_prefs_df)
+    user_similarities = user_similarities.loc['sample_base_user']
+    
+    most_similar_users = bfs_search(similarity_graph, '-Ackerman', user_similarities)
+    print(most_similar_users)
 
     while True:
         for event in pygame.event.get():
