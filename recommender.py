@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 
 # reading in csv files
-user_anime = pd.read_csv("anime_data/UserAnimeListTrimmed.csv", usecols=['username', 'anime_id', 'my_score', 'my_status'],
-    dtype={'username': str, 'anime_id': int, 'my_score': float, 'my_status': int})
+user_anime = pd.read_csv("anime_data/UserAnimeListTrimmed.csv", usecols=['username', 'anime_id', 'my_score'],
+    dtype={'username': str, 'anime_id': int, 'my_score': float})
 
 animes = pd.read_csv("anime_data/AnimeListTrimmed.csv", usecols=['anime_id', 'title', 'image_url', 'genre'],
     dtype={'anime_id': int, 'title': str, 'image_url': str, 'genre': str})
