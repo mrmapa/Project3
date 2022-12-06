@@ -1,5 +1,6 @@
 import pygame, sys
 from constants import *
+from recommender import *
 
 def setSearchBar(screen):
     # search bar
@@ -83,6 +84,31 @@ def main():
 
     forYou = font.render("For You...", 0, [255, 255, 255])
     setRecommendationBox(forYou, screen)
+
+    similarity_matrix, user_anime_matrix = similarity_matrix()
+
+    similarity_graph = {}
+    for user in similarity_matrix.index:
+        # finding the 20 users with the closest similarity scores
+        currUser = similarity_matrix.loc[:, user]
+        sortedSims = currUser.sort_values(ascending=False)[0:20]
+        sortedSims = sortedSims[sortedSims > 0.0]
+        adjacentUsers = list(sortedSims.index)
+
+        # finding the top 20 highest-rated animes by user
+        userPrefs = user_anime_matrix.loc[user].sort_values(ascending=False)[0:20]
+        scores = list(userPrefs.values)
+        animes = list(userPrefs.index)
+
+        # inserting animes / ratings into a dictionary
+        animePrefs = dict(zip(animes, scores))
+
+        # creating tuple of adjacentUsers and a user's anime preferences
+        value = (adjacentUsers, animePrefs)
+    
+        similarity_graph[user] = value
+
+
 
     while True:
         for event in pygame.event.get():

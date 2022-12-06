@@ -1,8 +1,29 @@
 import pandas as pd
 import numpy as np
 
-# reading in csv files
-def recommender():
+# base user: list of animes that base user has watched
+# most_similar_users: dictionary of most similar users to base user w/ similarity scores
+def anime_recommender(base_user, most_similar_users, similarity_graph):
+    #
+    animes = {}
+    for user in most_similar_users.keys():
+        for anime in similarity_graph[user][1].keys():
+            if anime in base_user:
+                continue
+            if anime not in animes.keys():
+                animes[anime] = [most_similar_users[user] * similarity_graph[user][1][anime], 1]
+            else:
+                animes[anime][0] += most_similar_users[user] * similarity_graph[user][1][anime]
+                animes[anime][1] += 1
+    anime_df = pd.DataFrame(data=animes, index=['sum_score', 'count'])
+    anime_df = anime_df.transpose() 
+    anime_df['weighted_averages'] = anime_df['sum_score'] / anime_df['count']
+    recommendations = anime_df.sort_values(by='weighted_averages', ascending=False)[0:5]
+    rec_animes = list(recommendations)
+    return(rec_animes)
+
+def similarity_matrix():
+    # reading in csv files
     user_anime = pd.read_csv("anime_data/UserAnimeListTrimmed.csv", usecols=['username', 'anime_id', 'my_score'],
         dtype={'username': str, 'anime_id': int, 'my_score': float})
 
@@ -19,9 +40,6 @@ def recommender():
 
     joined_df_cleaned = pd.merge(joined_df, agg_scores[['username']], on='username', how='inner')
 
-    # add new user data based on input
-
-
     # creating the matrix of animes and user scores and normalizing scores
     matrix = joined_df_cleaned.pivot_table(index="username", columns='title', values='my_score')
 
@@ -34,5 +52,4 @@ def recommender():
     # dropping diagonal values
     np.fill_diagonal(user_similarity.values, 0.0)
 
-    # building the graph
-    
+    return user_similarity, matrix
