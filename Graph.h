@@ -6,20 +6,20 @@ using namespace std;
 
 class Anime {
 public:
-    int animeID;
+    //int animeID;
     string title;
     string imageURL;
     string genre;
 
-    Anime(int id = 0, string name = "", string url = "", string category = ""){
-        animeID = id;
+    Anime(string name = "", string url = "", string category = ""){
+        //animeID = id;
         title = name;
         imageURL = url;
         genre = category;
     }
 
     void Print() {
-        cout << "Anime ID: " << animeID << endl;
+        //cout << "Anime ID: " << animeID << endl;
         cout << "Anime Title: " << title << endl;
         cout << "Anime URL: " << imageURL << endl;
         cout << "Anime Genre: " << genre << endl;

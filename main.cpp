@@ -44,6 +44,7 @@ int main() {
 #include <string>
 #include <map>
 #include "Graph.h"
+
 using namespace std;
 
 void loadCSV(const string& filename, map<int, Anime>& mapper) {
@@ -59,7 +60,7 @@ void loadCSV(const string& filename, map<int, Anime>& mapper) {
         //stream of data from a string
         istringstream stream(lineFromFile);
 
-        int animeID;
+        //int animeID;
         string title;
         string imageURL;
         const string urlFix = "https://cdn.myanimelist.net";
@@ -67,7 +68,7 @@ void loadCSV(const string& filename, map<int, Anime>& mapper) {
         string temp;
 
         getline(stream, temp, ';');
-        animeID = stoi(temp);
+        //animeID = stoi(temp);
         string name;
         getline(stream, name, ';');
         getline(stream, temp, ';');
@@ -84,7 +85,7 @@ void loadCSV(const string& filename, map<int, Anime>& mapper) {
         imageURL.replace(0, 32, urlFix);
 
         //creates an object from the information
-        Anime anime(animeID, name, imageURL, genre);
+        Anime anime(name, imageURL, genre);
         mapper[index] = anime;
         //mapper[index].Print();
         index++;
