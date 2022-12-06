@@ -90,14 +90,9 @@ def main():
     # user_rating: list of corresponding scores
     user_rated_animes = ['Neon Genesis Evangelion', 'Death Note', 'Hunter x Hunter (2011)', 'Monster', 'Death Parade'] #TODO: change this to take input
     user_ratings = [7.0, 6.0, 9.0, 2.0, 4.0] # TODO: change this to take input
-    user_prefs = {'username':['sample_base_user'] * len(user_rated_animes), 'title': user_rated_animes, 'my_score': user_ratings}
-    user_prefs_df = pd.DataFrame(data=user_prefs)
-    user_prefs_df = user_prefs_df.pivot_table(index="username", columns='title', values='my_score')
-
-    user_prefs_df = user_prefs_df.subtract(user_prefs_df.mean(axis=1), axis='rows')
-    user_prefs_df = user_prefs_df.divide(user_prefs_df.std(axis=1), axis='rows')
-    #user_prefs_df = pd.concat([similarity_matrix, user_prefs_df])
-    similarity_matrix = similarity_matrix_generator(user_prefs_df)
+    user_prefs_df = create_user_df(user_rated_animes, user_ratings)
+    
+    similarity_matrix, anime_scores = similarity_matrix_generator(user_prefs_df)
     similarity_matrix = similarity_matrix.iloc[: , :-1]
     user_similarities = similarity_matrix.loc['sample_base_user']
     similarity_matrix = similarity_matrix[0:1000]
@@ -111,7 +106,7 @@ def main():
         adjacentUsers = set(sortedSims.index)
 
         # finding the top 20 highest-rated animes by user
-        userPrefs = similarity_matrix.loc[user].sort_values(ascending=False)[0:20]
+        userPrefs = anime_scores.loc[user].sort_values(ascending=False)[0:20]
         scores = list(userPrefs.values)
         animes = list(userPrefs.index)
 
@@ -137,6 +132,9 @@ def main():
 
     print(bfs_time, dfs_time)
 
+    rec_animes = anime_recommender(user_rated_animes, most_similar_users, similarity_graph)
+    print(rec_animes)
+    
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

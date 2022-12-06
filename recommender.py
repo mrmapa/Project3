@@ -24,7 +24,7 @@ def anime_recommender(base_user, most_similar_users, similarity_graph):
     anime_df['weighted_averages'] = anime_df['sum_score'] / anime_df['count']
     # extract top 5 rated animes and return it as a list
     recommendations = anime_df.sort_values(by='weighted_averages', ascending=False)[0:5]
-    rec_animes = list(recommendations)
+    rec_animes = list(recommendations.index)
     return(rec_animes)
 
 def similarity_matrix_generator(user_prefs_df):
@@ -58,4 +58,16 @@ def similarity_matrix_generator(user_prefs_df):
     # dropping diagonal values
     np.fill_diagonal(user_similarity.values, 0.0)
 
-    return user_similarity
+    return user_similarity, matrix
+
+def create_user_df(user_rated_animes, user_ratings):
+    # convert user input into dictionary then DataFrame of user scores
+    user_prefs = {'username':['sample_base_user'] * len(user_rated_animes), 'title': user_rated_animes, 'my_score': user_ratings}
+    user_prefs_df = pd.DataFrame(data=user_prefs)
+    user_prefs_df = user_prefs_df.pivot_table(index="username", columns='title', values='my_score')
+
+    # normalize user scores
+    user_prefs_df = user_prefs_df.subtract(user_prefs_df.mean(axis=1), axis='rows')
+    user_prefs_df = user_prefs_df.divide(user_prefs_df.std(axis=1), axis='rows')
+
+    return(user_prefs_df)
