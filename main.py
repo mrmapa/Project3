@@ -86,18 +86,32 @@ def main():
     forYou = font.render("For You...", 0, [255, 255, 255])
     setRecommendationBox(forYou, screen)
 
-    similarity_matrix, user_anime_matrix = similarity_matrix_generator()
+    # user_rated_animes: list of animes that user has rated
+    # user_rating: list of corresponding scores
+    user_rated_animes = ['Neon Genesis Evangelion', 'Death Note', 'Hunter x Hunter (2011)', 'Monster', 'Death Parade'] #TODO: change this to take input
+    user_ratings = [7.0, 6.0, 9.0, 2.0, 4.0] # TODO: change this to take input
+    user_prefs = {'username':['sample_base_user'] * len(user_rated_animes), 'title': user_rated_animes, 'my_score': user_ratings}
+    user_prefs_df = pd.DataFrame(data=user_prefs)
+    user_prefs_df = user_prefs_df.pivot_table(index="username", columns='title', values='my_score')
 
+    user_prefs_df = user_prefs_df.subtract(user_prefs_df.mean(axis=1), axis='rows')
+    user_prefs_df = user_prefs_df.divide(user_prefs_df.std(axis=1), axis='rows')
+    #user_prefs_df = pd.concat([similarity_matrix, user_prefs_df])
+    similarity_matrix = similarity_matrix_generator(user_prefs_df)
+    similarity_matrix = similarity_matrix.iloc[: , :-1]
+    user_similarities = similarity_matrix.loc['sample_base_user']
+    similarity_matrix = similarity_matrix[0:1000]
+
+    # creating graph without user-input data
     similarity_graph = {}
     for user in similarity_matrix.index:
         # finding the 20 users with the closest similarity scores
         currUser = similarity_matrix.loc[:, user]
         sortedSims = currUser.sort_values(ascending=False)[0:20]
-        sortedSims = sortedSims[sortedSims > 0.0]
-        adjacentUsers = list(sortedSims.index)
+        adjacentUsers = set(sortedSims.index)
 
         # finding the top 20 highest-rated animes by user
-        userPrefs = user_anime_matrix.loc[user].sort_values(ascending=False)[0:20]
+        userPrefs = similarity_matrix.loc[user].sort_values(ascending=False)[0:20]
         scores = list(userPrefs.values)
         animes = list(userPrefs.index)
 
@@ -108,33 +122,26 @@ def main():
         value = (adjacentUsers, animePrefs)
     
         similarity_graph[user] = value
-
-    # user_rated_animes: list of animes that user has rated
-    # user_rating: list of corresponding scores
-    user_rated_animes = ['Neon Genesis Evangelion', 'Death Note', 'Hunter x Hunter (2011)', 'Monster', 'Death Parade']
-    user_ratings = [7.0, 6.0, 9.0, 2.0, 4.0]
-    user_prefs = {'username':['sample_base_user'] * len(user_rated_animes), 'title': user_rated_animes, 'my_score': user_ratings}
-    user_prefs_df = pd.DataFrame(data=user_prefs)
-    user_prefs_df = user_prefs_df.pivot_table(index="username", columns='title', values='my_score')
-
-    user_prefs_df = user_prefs_df.subtract(user_prefs_df.mean(axis=1), axis='rows')
-    user_prefs_df = user_prefs_df.divide(user_prefs_df.std(axis=1), axis='rows')
-    user_prefs_df = pd.concat([similarity_matrix, user_prefs_df])
-    user_prefs_df
-
-    print("Starting BFS")
-
-    user_similarities = similarity_matrix_generator(user_prefs_df)
-    user_similarities = user_similarities.loc['sample_base_user']
+    # making the graph bidirectional
+    for user in similarity_graph.keys():
+        for adjacentUser in similarity_graph[user][0]:
+            similarity_graph[adjacentUser][0].add(user)
     
-    most_similar_users = bfs_search(similarity_graph, '-Ackerman', user_similarities)
+    print("Starting BFS")
+    most_similar_users, bfs_time = bfs_search(similarity_graph, '-Ackerman', user_similarities)
     print(most_similar_users)
+    
+    print("Starting DFS")
+    most_similar_users, dfs_time = dfs_search(similarity_graph, '-Ackerman', user_similarities)
+    print(most_similar_users)
+
+    print(bfs_time, dfs_time)
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-            pygame.display.update()
+        pygame.display.update()
 
 if __name__ == "__main__":
     main()
