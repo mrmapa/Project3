@@ -42,7 +42,7 @@ def bfs_search(graph, source, user_prefs):
                 score = user_prefs[neighborUser]
 
                 # add score to most_similar_users and remove smallest score if necessary
-                if (len(most_similar_users) < 20 or score > min(most_similar_users.keys())) and score > 0:
+                if (len(most_similar_users) < 20 or score > min(most_similar_users.keys())):
                     most_similar_users[score] = neighborUser
                     if len(most_similar_users) == 21:
                         most_similar_users.pop(min(most_similar_users.keys()))
@@ -51,7 +51,7 @@ def bfs_search(graph, source, user_prefs):
     # get time at end
     end = timeit.default_timer()
     time_elapsed = end - start
-    return([similar_users, time_elapsed])
+    return([similar_users, str(time_elapsed)])
 
 def dfs_search(graph, source, user_prefs):
     # get time at start
@@ -88,7 +88,7 @@ def dfs_search(graph, source, user_prefs):
                 score = user_prefs[neighborUser]
 
                 # add score to most_similar_users and remove smallest score if necessary
-                if (len(most_similar_users) < 20 or score > min(most_similar_users.keys())) and score > 0:
+                if (len(most_similar_users) < 20 or score > min(most_similar_users.keys())):
                     most_similar_users[score] = neighborUser
                     if len(most_similar_users) == 21:
                         most_similar_users.pop(min(most_similar_users.keys()))
@@ -97,4 +97,4 @@ def dfs_search(graph, source, user_prefs):
     # get time at end
     end = timeit.default_timer()
     time_elapsed = end - start
-    return([similar_users, time_elapsed])
+    return([similar_users, str(time_elapsed)])

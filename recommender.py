@@ -41,7 +41,7 @@ def similarity_matrix_generator(user_prefs_df):
     # reducing the dataframe to the top 1000 users based off the # of scores
     agg_scores = joined_df.groupby('username').agg(num_scores = ('my_score', 'count')).reset_index()
     agg_scores = agg_scores.sort_values('num_scores', ascending=False)
-    agg_scores = agg_scores[0:1000]
+    agg_scores = agg_scores[0:2000]
 
     joined_df_cleaned = pd.merge(joined_df, agg_scores[['username']], on='username', how='inner')
 
