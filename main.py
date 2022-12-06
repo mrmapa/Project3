@@ -1,5 +1,7 @@
 import pygame, sys
 from constants import *
+from recommender import *
+from traversals import *
 
 def setSearchBar(searchText, input, font, screen):
     # search bar
@@ -116,11 +118,61 @@ def main():
     forYou = font.render("For You...", False, [255, 255, 255])
     setRecommendationBox(forYou, screen)
 
-    # loading user rating bar
-    input_rating = 0
-    userRatingBarSetup(font, userRatingFont, screen)
-    inputRating(input_rating, inputRatingFont, screen)
+    #### from Mapa-Hupey
+    # # loading user rating bar
+    # input_rating = 0
+    # userRatingBarSetup(font, userRatingFont, screen)
+    # inputRating(input_rating, inputRatingFont, screen)
 
+    # user_rated_animes: list of animes that user has rated
+    # user_rating: list of corresponding scores
+    user_rated_animes = ['Neon Genesis Evangelion', 'Death Note', 'Hunter x Hunter (2011)', 'Monster', 'Death Parade'] #TODO: change this to take input
+    user_ratings = [7.0, 6.0, 9.0, 2.0, 4.0] # TODO: change this to take input
+    user_prefs_df = create_user_df(user_rated_animes, user_ratings)
+    
+    similarity_matrix, anime_scores = similarity_matrix_generator(user_prefs_df)
+    similarity_matrix = similarity_matrix.iloc[: , :-1]
+    user_similarities = similarity_matrix.loc['sample_base_user']
+    similarity_matrix = similarity_matrix[0:1000]
+
+    # creating graph without user-input data
+    similarity_graph = {}
+    for user in similarity_matrix.index:
+        # finding the 20 users with the closest similarity scores
+        currUser = similarity_matrix.loc[:, user]
+        sortedSims = currUser.sort_values(ascending=False)[0:20]
+        adjacentUsers = set(sortedSims.index)
+
+        # finding the top 20 highest-rated animes by user
+        userPrefs = anime_scores.loc[user].sort_values(ascending=False)[0:20]
+        scores = list(userPrefs.values)
+        animes = list(userPrefs.index)
+
+        # inserting animes / ratings into a dictionary
+        animePrefs = dict(zip(animes, scores))
+
+        # creating tuple of adjacentUsers and a user's anime preferences
+        value = (adjacentUsers, animePrefs)
+    
+        similarity_graph[user] = value
+    # making the graph bidirectional
+    for user in similarity_graph.keys():
+        for adjacentUser in similarity_graph[user][0]:
+            similarity_graph[adjacentUser][0].add(user)
+    
+    print("Starting BFS")
+    most_similar_users, bfs_time = bfs_search(similarity_graph, '-Ackerman', user_similarities)
+    print(most_similar_users)
+    
+    print("Starting DFS")
+    most_similar_users, dfs_time = dfs_search(similarity_graph, '-Ackerman', user_similarities)
+    print(most_similar_users)
+
+    print(bfs_time, dfs_time)
+
+    rec_animes = anime_recommender(user_rated_animes, most_similar_users, similarity_graph)
+    print(rec_animes)
+    
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
