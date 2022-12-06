@@ -95,7 +95,7 @@ void loadCSV(const string& filename, map<int, Anime>& mapper) {
 int main() {
     map<int, Anime> mapper;
 
-    loadCSV("C:/Users/derek/Documents/GitHub/Project3/src/anime_filtered_modified.csv", mapper);
+    loadCSV("src/anime_filtered_modified.csv", mapper);
 
     for(auto iter: mapper) {
         iter.second.Print();
