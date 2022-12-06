@@ -1,5 +1,12 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Network.hpp>
+
 #include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <string>
+
+#include "Graph.h"
 
 using namespace std;
 using namespace sf;
@@ -81,6 +88,47 @@ void setCompareAlgorithmsBox(RectangleShape &algorithmsCompare, Text &DFS, Text 
     BFS.setPosition(Vector2f(WIDTH-algorithmsCompare.getSize().x + 10, HEIGHT-algorithmsCompare.getSize().y + 50));
 }
 
+// Recommendation box
+void setRecommendationBox(vector<RectangleShape*> &recommendations, Text &forYou)
+{
+    // Box
+    float y_axis = 700;
+    for (int i = 5 ; i >= 0 ; i--)
+    {
+        recommendations.emplace_back(new RectangleShape(Vector2f(400,100)));
+        RectangleShape* r = recommendations.back();
+        r->setPosition(Vector2f(WIDTH-r->getSize().x, (y_axis - r->getSize().y) - ((float) i * r->getSize().y)));
+        r->setOutlineColor(Color(20,20,20));
+        r->setOutlineThickness(4);
+        r->setFillColor(Color(70,70,70));
+    }
+
+    // Text
+    forYou.setFillColor(Color::White);
+    forYou.setPosition(Vector2f(WIDTH - 250, 50));
+}
+
+// Filter Sidebar menu
+void setFilterSidebarMenu(vector<RectangleShape*> &filters, Text &filterText, vector<Text*> &filterOptions)
+{
+    float y_axis = 200;
+    for (int i = 0 ; i < 3 ; i++)
+    {
+        filters.emplace_back(new RectangleShape(Vector2f(200,100)));
+        RectangleShape* f = filters.back();
+        f->setPosition(Vector2f(0, y_axis + ((float) i * f->getSize().y)));
+        f->setFillColor(Color(69, 27, 82));
+        f->setOutlineColor(Color(20,20,20));
+        f->setOutlineThickness(4);
+    }
+
+    filterText.setPosition(Vector2f(50, y_axis - 35));
+    filterText.setFillColor(Color::White);
+
+    filterOptions[0]->setString("Genre");
+    filterOptions[1]->setString("Rating");
+}
+
 // Search function (beta)
 void search(Event event, Mouse &mouse, RenderWindow &window, string &input)
 {
@@ -94,6 +142,64 @@ void search(Event event, Mouse &mouse, RenderWindow &window, string &input)
     }
 }
 
+void getImageFromURL(Http::Request &animeImage, Http::Response &imageResponse, Http &http, Texture &animeTexture)
+{
+    animeImage.setMethod(Http::Request::Get);
+    animeImage.setUri("/images/anime/7/25761.jpg");
+    animeImage.setHttpVersion(1,1);
+    animeImage.setField("From","me");
+
+    imageResponse = http.sendRequest(animeImage);
+
+    string body = imageResponse.getBody();
+    animeTexture.loadFromMemory(body.c_str(), imageResponse.getBody().size());
+}
+
+// Getting all the data
+void loadCSV(const string& filename, map<int, Anime>& mapper) {
+    ifstream inFile(filename);
+
+    //reads the first line of data
+    string lineFromFile;
+    getline(inFile, lineFromFile);
+
+    int index = 0;
+
+    while(getline(inFile, lineFromFile) && index < 1000){
+        //stream of data from a string
+        istringstream stream(lineFromFile);
+
+        int animeID;
+        string title;
+        string imageURL;
+        const string urlFix = "https://cdn.myanimelist.net";
+        string genre;
+        string temp;
+
+        getline(stream, temp, ';');
+        animeID = stoi(temp);
+        string name;
+        getline(stream, name, ';');
+        getline(stream, temp, ';');
+        getline(stream, temp, ';');
+        getline(stream, temp, ';');
+        getline(stream, imageURL, ';');
+
+        for(int i = 0; i < 22; i++) {
+            getline(stream, temp, ';');
+        }
+
+        getline(stream, genre, ';');
+
+        imageURL.replace(0, 32, urlFix);
+
+        //creates an object from the information
+        Anime anime(animeID, name, imageURL, genre);
+        mapper[index] = anime;
+        //mapper[index].Print();
+        index++;
+    }
+}
 
 int main() {
 
@@ -132,11 +238,36 @@ int main() {
     Text BFS("BFS: ", font);
     setCompareAlgorithmsBox(algorithmsCompare, DFS, BFS);
 
+    // Recommended Anime Display
+    vector<RectangleShape*> recommendations;
+    Text forYou("For You...", font);
+    setRecommendationBox(recommendations, forYou);
+
+    // Filter Sidebar
+    /*
+    vector<RectangleShape*> filters;
+    Text filterText("Filters", font);
+    vector<Text*> filterOptions;
+    setFilterSidebarMenu(filters, filterText);
+    */
+
     // Mouse button
     Mouse mouse;
 
     // Clock
     Clock clock;
+
+    // Loading the anime file
+    map<int, Anime> mapper;
+    loadCSV("anime_filtered_modified.csv", mapper);
+
+    // Anime image
+    Sprite animeImage;
+    Texture animeTexture;
+    Http http("127.0.0.0");
+    Http::Request imageRequest;
+    Http::Response imageResponse;
+    getImageFromURL(imageRequest, imageResponse, http, animeTexture);
 
     while (window.isOpen())
     {
@@ -203,6 +334,18 @@ int main() {
         window.draw(algorithmsCompare);
         window.draw(DFS);
         window.draw(BFS);
+
+        // Recommendation box
+        for (auto r : recommendations)
+            window.draw(*r);
+        window.draw(forYou);
+
+        // Filter box
+        /*
+        for (auto r : filters)
+            window.draw(*r);
+        window.draw(filterText);
+        */
 
         // Logo
         window.draw(logo);

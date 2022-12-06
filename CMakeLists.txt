@@ -7,4 +7,4 @@ set(SFML_DIR "C:/Users/alexa/Downloads/SFML-2.5.1-windows-gcc-7.3.0-mingw-64-bit
 
 find_package(SFML 2.5.1 COMPONENTS graphics audio REQUIRED)
 add_executable(Project3 main.cpp)
-target_link_libraries(Project3 sfml-graphics sfml-audio)
+target_link_libraries(Project3 sfml-graphics sfml-audio sfml-network)
