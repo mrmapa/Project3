@@ -1,3 +1,4 @@
+# constants for various pygame functions
 WIDTH = 1400
 HEIGHT = 800
 LOGO_SIZE = (299, 54)

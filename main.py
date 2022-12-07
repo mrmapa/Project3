@@ -22,6 +22,7 @@ def setSearchBar(searchText, input, font, screen):
         searchText = font.render(input, False, (120, 120, 120))
     screen.blit(searchText, searchBar_rect)
 
+# gets insertion status of user-input anime and rating
 def insertionStatus(input, anime_list, input_rating):
     status = ""
     if (input not in anime_list):
@@ -33,6 +34,7 @@ def insertionStatus(input, anime_list, input_rating):
 
     return status
 
+# displays insertion status
 def insertionStatusVisual(status, font, screen):
     status_surface = pygame.Surface((300, 100))
     status_rect = status_surface.get_rect(topleft = (450, 150))
@@ -41,6 +43,7 @@ def insertionStatusVisual(status, font, screen):
     status_surface.blit(status_text, (35, 40))
     screen.blit(status_surface, status_rect)
 
+# graphics for recommendations boxes
 def setRecommendationBox(forYou, screen):
     new_rec = pygame.Surface((600, 600))
     new_rec.fill([70, 70, 70])
@@ -53,6 +56,7 @@ def setRecommendationBox(forYou, screen):
     forYou_rect = forYou.get_rect(center = (WIDTH - 300, 75))
     screen.blit(forYou, forYou_rect)
 
+# displays text for recommendations
 def setRecommendationsInBox(rec_animes, font, screen):
     for i in range (0, 5):
         recSurface = pygame.Surface((200, 60))
@@ -62,6 +66,7 @@ def setRecommendationsInBox(rec_animes, font, screen):
         screen.blit(recSurface, recSurface_rect)
         screen.blit(recText, recSurface_rect)
 
+# displays the comparison of DFS and BFS
 def setCompareAlgorithmsBox(dfs, bfs, screen):
     algorithms = pygame.Surface((200, 100))
     algorithms.fill(PURPLE)
@@ -73,6 +78,7 @@ def setCompareAlgorithmsBox(dfs, bfs, screen):
     screen.blit(dfs, dfs_rect)
     screen.blit(bfs, bfs_rect)
 
+# displays the rating bar at the bottom of the GUI
 def userRatingBarSetup(smallFont, bigFont, screen):
     # bar
     for i in range(0, 10):
@@ -90,6 +96,7 @@ def userRatingBarSetup(smallFont, bigFont, screen):
     ratingTitle_rect = ratingTitle.get_rect(topleft = (230, HEIGHT - 150))
     screen.blit(ratingText, ratingTitle_rect)
 
+# displays the last input rating
 def inputRating(input_rating, font, screen):
     inputString = str(input_rating)
     inputRatingText = font.render("Your Rating: " + inputString, False, (255, 255, 255))
@@ -159,7 +166,6 @@ def main():
     instructions_surface.blit(instruction_text5, (0, 80))
     instructions_surface.blit(instruction_text6, (0, 100))
 
-    #### from Mapa-Hupey
     # loading user rating bar
     input_rating = 0
     userRatingBarSetup(font, userRatingFont, screen)
@@ -170,43 +176,60 @@ def main():
         dtype={'anime_id': int, 'title': str, 'image_url': str, 'genre': str})
     anime_list = set(anime_list['title'])
     
+    # initializing variables
     user_rated_animes = []
     user_ratings = []
     rec_animes = []
     status = ""
+
     while True:
         for event in pygame.event.get():
+            # quits program if pygame is closed
             if event.type == pygame.QUIT:
                 sys.exit()
+
             if event.type == pygame.KEYDOWN:
+                # if backspace key hit, remove last character of input
                 if event.key == pygame.K_BACKSPACE:
                     input = input[:-1]
+
+                # if enter key hit, add the user-input anime and rating
                 elif event.key == pygame.K_RETURN:
                     if input in anime_list and input_rating != 0:
                         user_rated_animes.append(input)
                         user_ratings.append(input_rating)
                     else:
                         print("ERROR: Insertion not successful.")
-
+                # prints whether insertion was successful
                     status = insertionStatus(input, anime_list, input_rating)
                     print(status)
                     input = ""
                     input_rating = 0
                 else:
                     input += event.unicode
+            
             if event.type == pygame.MOUSEBUTTONDOWN:
+                # if user clicks on rating bar, updates input_rating
                 if (0 <= pygame.mouse.get_pos()[0] <= 1000 and
                     HEIGHT-100 <= pygame.mouse.get_pos()[1] <= HEIGHT):
                         input_rating = (pygame.mouse.get_pos()[0] // 100) + 1
+
+                # if user clicks on generate button, finds recommendations
                 elif generateButton_rect.collidepoint(event.pos):
+                    # throws error if no animes have been input
                     if (len(user_rated_animes) == 0):
                         print("Error: No animes rated.")
                         continue
+
+                    # generates dataframe of user-watched animes and ratings
                     user_prefs_df = create_user_df(user_rated_animes, user_ratings)
 
+                    # generates dataframe of similarity scores between users and dataframe of anime ratings by user
                     similarity_matrix, anime_scores = similarity_matrix_generator(user_prefs_df)
                     similarity_matrix = similarity_matrix.iloc[: , :-1]
                     user_similarities = similarity_matrix.loc['sample_base_user']
+
+                    # error if not enough user data was input to draw similarities between other users
                     if (user_similarities.isna().sum() == len(user_similarities)):
                         print("Warning: Not enough user data to produce accurate results.")
                     similarity_matrix = similarity_matrix.iloc[:-1, :]
@@ -231,10 +254,12 @@ def main():
                         value = (adjacentUsers, animePrefs)
                     
                         similarity_graph[user] = value
+
                     # making the graph bidirectional
                     for user in similarity_graph.keys():
                         for adjacentUser in similarity_graph[user][0]:
                             similarity_graph[adjacentUser][0].add(user)
+
                     # search the graph using DFS and BFS
                     most_similar_users_1, bfs_time = bfs_search(similarity_graph, '-Ackerman', user_similarities)
                     most_similar_users_2, dfs_time = dfs_search(similarity_graph, '-Ackerman', user_similarities)
@@ -244,10 +269,12 @@ def main():
                     dfs_time = round(dfs_time, 3)
                     dfs = font.render("DFS: " + str(dfs_time) + "ms", False, [255, 255, 255])
                     bfs = font.render("BFS: " + str(bfs_time) + "ms", False, [255, 255, 255])
+
                     # create list of 5 recommended animes
                     rec_animes = anime_recommender(user_rated_animes, most_similar_users_1, similarity_graph)
                     print(rec_animes)
 
+            # drawing graphics to GUI
             screen.fill((20, 20, 20))
             setSearchBar(searchText, input, font, screen)
             setRecommendationBox(forYou, screen)
