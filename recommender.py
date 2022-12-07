@@ -6,8 +6,8 @@ import numpy as np
 def anime_recommender(base_user, most_similar_users, similarity_graph):
     # creating dictionary of animes
     animes = {}
-    for user in most_similar_users.keys():
-        for anime in similarity_graph[user][1].keys():
+    for user in most_similar_users.keys():  # O(1)
+        for anime in similarity_graph[user][1].keys(): # O(1)
             # ignore animes already watched by base user
             if anime in base_user:
                 continue
@@ -29,7 +29,7 @@ def anime_recommender(base_user, most_similar_users, similarity_graph):
 
 def similarity_matrix_generator(user_prefs_df):
     # reading in csv files
-    user_anime = pd.read_csv("anime_data/UserAnimeListTrimmed.csv", usecols=['username', 'anime_id', 'my_score'],
+    user_anime = pd.read_csv("anime_data/UserAnimeListTrimmed.csv", usecols=['username', 'anime_id', 'my_score'], # O(n) - size of file
         dtype={'username': str, 'anime_id': int, 'my_score': float})
 
     animes = pd.read_csv("anime_data/AnimeListTrimmed.csv", usecols=['anime_id', 'title', 'image_url', 'genre'],

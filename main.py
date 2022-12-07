@@ -207,6 +207,8 @@ def main():
                     similarity_matrix, anime_scores = similarity_matrix_generator(user_prefs_df)
                     similarity_matrix = similarity_matrix.iloc[: , :-1]
                     user_similarities = similarity_matrix.loc['sample_base_user']
+                    if (user_similarities.isna().sum() == len(user_similarities)):
+                        print("Warning: Not enough user data to produce accurate results.")
                     similarity_matrix = similarity_matrix.iloc[:-1, :]
 
                     # creating graph without user-input data
@@ -236,8 +238,12 @@ def main():
                     # search the graph using DFS and BFS
                     most_similar_users_1, bfs_time = bfs_search(similarity_graph, '-Ackerman', user_similarities)
                     most_similar_users_2, dfs_time = dfs_search(similarity_graph, '-Ackerman', user_similarities)
-                    dfs = font.render("DFS: " + dfs_time, False, [255, 255, 255])
-                    bfs = font.render("BFS: " + bfs_time, False, [255, 255, 255])
+                    bfs_time = bfs_time * 1000
+                    bfs_time = round(bfs_time, 3)
+                    dfs_time = dfs_time * 1000
+                    dfs_time = round(dfs_time, 3)
+                    dfs = font.render("DFS: " + str(dfs_time) + "ms", False, [255, 255, 255])
+                    bfs = font.render("BFS: " + str(bfs_time) + "ms", False, [255, 255, 255])
                     # create list of 5 recommended animes
                     rec_animes = anime_recommender(user_rated_animes, most_similar_users_1, similarity_graph)
                     print(rec_animes)

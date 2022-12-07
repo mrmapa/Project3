@@ -51,7 +51,7 @@ def bfs_search(graph, source, user_prefs):
     # get time at end
     end = timeit.default_timer()
     time_elapsed = end - start
-    return([similar_users, str(time_elapsed)])
+    return([similar_users, time_elapsed])
 
 def dfs_search(graph, source, user_prefs):
     # get time at start
@@ -97,4 +97,4 @@ def dfs_search(graph, source, user_prefs):
     # get time at end
     end = timeit.default_timer()
     time_elapsed = end - start
-    return([similar_users, str(time_elapsed)])
+    return([similar_users, time_elapsed])
